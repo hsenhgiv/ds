@@ -1,0 +1,48 @@
+install.packages('sofa')
+library('sofa')
+#------------------------------
+# Client Connection
+(x <- Cushion$new(user="thekunalvartak", pwd="root"))
+# Ping Your Server
+x$ping()
+# Create a NEW Database
+db_create(x, dbname='student_db')
+# List Databases
+db_list(x)
+# Create a Document
+doc1 <- '{"RollNo": 1, "studentName": "Zombie", "Age": 20, "Grade": "O"}'
+doc2 <- '{"RollNo": 2, "studentName": "Alien", "Age": 18, "Grade": "B"}'
+doc3 <- '{"RollNo": 3, "studentName": "Luffy", "Age": 20, "Grade": "A", "Remark":
+"PASS"}'
+doc_create(x, dbname="student_db", doc1, docid="101")
+doc_create(x, dbname="student_db", doc2, docid="102")
+doc_create(x, dbname="student_db", doc3, docid="103")
+# CHANGES FEED
+db_changes(x,"student_db")
+# Search for id -> null so all docs will display
+db_query(x, dbname="student_db", selector=list('_id'=list('$gt'=NULL)))$docs
+# Search for Students with Grade A
+db_query(x, dbname="student_db", selector=list(Grade="A"))$docs
+# Search for Students with Remark PASS
+db_query(x, dbname="student_db", selector=list(Remark="PASS"))$docs
+# Search for only certain fields where RollNo -> 2
+db_query(x, dbname="student_db", selector=list(RollNo=list('$gt'='2')),
+fields=c("studentName","Grade"))$docs
+# Search for Students with Age 20
+db_query(x, dbname="student_db", selector=list(Age=20))$docs
+# Convert Result of a Query into a dataframe using JSONLITE
+library("jsonlite")
+res <- db_query(x, dbname="student_db", selector=list('_id'=list('$gt'=NULL)),
+fields=c("studentName","RollNo","Grade","Remark"), as="json")
+# Display json DOC
+fromJSON(res)$docs
+# Update DOC
+doc4 <- '{"RollNo": 3, "studentName": "Luffy", "Age": 20, "Grade": "F", "Remark":
+"FAIL"}'
+doc_update(x, dbname="student_db", doc=doc4, docid="103",
+rev="1-e770f5d5c3874a14f06273f69d067192")
+# Delete DOC
+doc_delete(x, dbname="student_db", docid="103")
+doc_get(x, dbname="student_db", docid="103")
+# Drop Database
+db_delete(x, dbname="student_db")
